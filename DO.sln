@@ -3,9 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.31129.286
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DO", "DO\DO.csproj", "{936AA0BA-7754-4B3C-8092-0DB8AB185918}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DO", "DO\DO.csproj", "{936AA0BA-7754-4B3C-8092-0DB8AB185918}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DO.Genetic", "DO.Genetic\DO.Genetic.csproj", "{1F3A5CAE-20DE-41E5-9D92-6518B662A773}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DO.Algorithm", "DO.Genetic\DO.Algorithm.csproj", "{1F3A5CAE-20DE-41E5-9D92-6518B662A773}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

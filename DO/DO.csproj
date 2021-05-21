@@ -6,7 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\DO.Genetic\DO.Genetic.csproj" />
+    <ProjectReference Include="..\DO.Genetic\DO.Algorithm.csproj" />
   </ItemGroup>
 
 </Project>

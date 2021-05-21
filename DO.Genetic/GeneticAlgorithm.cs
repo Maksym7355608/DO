@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Linq;
 
-namespace DO.Genetic
+namespace DO.Algorithm
 {
     public class GeneticAlgorithm
     {
