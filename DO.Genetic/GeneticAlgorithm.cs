@@ -80,9 +80,10 @@ namespace DO.Algorithm
             CurrentYellowParent = YellowPopulation.First(y => CalculateCF(y) == YellowPopulation.Max(x => CalculateCF(x)));
         }
 
-        public void CreateMask()
+        public List<int> CreateMask()
         {
             CurrentMask = CreateChromosome();
+            return CurrentMask;
         }
 
         public void GetChildren()
@@ -164,7 +165,11 @@ namespace DO.Algorithm
                 {
                     return child;
                 }
-                else child.Clear();
+                else
+                {
+                    mask = CreateMask();
+                    child.Clear();
+                }
             }
         }
 

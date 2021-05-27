@@ -152,7 +152,7 @@ namespace DO
 
                 WriteIterationBestResultToFile(i, rez_cf);
 
-                if (rez.Item2 == algorithm.GetTheBestChromosome().Item2)
+                if (rez.Item2 <= algorithm.GetTheBestChromosome().Item2)
                     i_not++;
                 else
                     i_not = 0;
