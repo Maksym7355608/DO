@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Text;
 using DO.Algorithm;
 
 namespace DO
@@ -9,41 +11,65 @@ namespace DO
     {
         public static void LaunchMainMenu()
         {
-            Console.WriteLine("Choose algorithm:" +
-                "1) Genetic algorithm;" +
-                "2) Beef algorithm;" +
-                "3) Greedy algorithm;" +
-                "4) Exit" +
-                "Your choose: ");
-            int n = int.Parse(Console.ReadKey().KeyChar.ToString());
-            switch (n)
+            while (true)
             {
-                case 1:
-                    LaunchGenetic();
-                    break;
-                case 2:
-                    LaunchBeef();
-                    break;
-                case 3:
-                    LaunchGreedy();
-                    break;
-                case 4:
-                    Console.WriteLine("Bye");
-                    return;
-                default:
-                    Console.WriteLine("Error input! Try again");
-                    break;
+                Console.WriteLine("Choose algorithm:\n" +
+                                "1) Genetic algorithm;\n" +
+                                "2) Bees algorithm;\n" +
+                                "3) Greedy algorithm;\n" +
+                                "4) Exit\n" +
+                                "Your choose: ");
+                int n = int.Parse(Console.ReadLine());
+                switch (n)
+                {
+                    case 1:
+                        LaunchGenetic();
+                        break;
+                    case 2:
+                        LaunchBees();
+                        break;
+                    case 3:
+                        LaunchGreedy();
+                        break;
+                    case 4:
+                        Console.WriteLine("Bye");
+                        return;
+                    default:
+                        Console.WriteLine("Error input! Try again");
+                        break;
+                }
             }
+
         }
 
-        #region Genetic Algorithm UI
-        private static void LaunchGenetic()
+        private static void ReadStartInfoFromFile(ref int production_size, ref string[] production_names, ref float[] ecologies, ref int[] costs, ref int[] profits, ref int a)
         {
-            int production_size = Convert.ToInt32(Console.ReadLine());
-            string[] production_names = new string[production_size];
-            float[] ecologies = new float[production_size];
-            int[] costs = new int[production_size];
-            int[] profits = new int[production_size];
+            using StreamReader fs = new StreamReader("data1.txt", Encoding.Default);
+            string line;
+            line = fs.ReadLine();
+            production_size = int.Parse(line);
+            line = fs.ReadLine();
+            production_names = line.Split(';');
+            line = fs.ReadLine();
+            ecologies = line.Split(';').Select(x => float.Parse(x)).ToArray();
+            line = fs.ReadLine();
+            costs = line.Split(';').Select(x => int.Parse(x)).ToArray();
+            line = fs.ReadLine();
+            profits = line.Split(';').Select(x => int.Parse(x)).ToArray();
+            line = fs.ReadLine();
+            a = int.Parse(line);
+
+            fs.Close();
+        }
+        private static void ReadStartInfoFromConsole(ref int production_size, ref string[] production_names, ref float[] ecologies, ref int[] costs, ref int[] profits, ref int a)
+        {
+            Console.WriteLine("Enter production count: ");
+            production_size = Convert.ToInt32(Console.ReadLine());
+            
+            production_names = new string[production_size];
+            ecologies = new float[production_size];
+            costs = new int[production_size];
+            profits = new int[production_size];
             for (int i = 0; i < production_size; i++)
             {
                 Console.WriteLine($"Write info about product {i}:");
@@ -57,39 +83,81 @@ namespace DO
                 profits[i] = Convert.ToInt32(Console.ReadLine());
             }
             Console.Write("Enter A value: ");
-            int a = Convert.ToInt32(Console.ReadLine());
+            a = Convert.ToInt32(Console.ReadLine());
+        }
+        private static void WriteIterationBestResultToFile(int counter, float cf)
+        {
+            using StreamWriter fs = new StreamWriter("iteration.txt");
+            fs.WriteLine($"Iteration: {counter}\tCF: {cf}");
+        }
+        private static void WriteResultToFile(string[] names, float cf)
+        {
+            using StreamWriter fs = new StreamWriter("result.txt");
+            fs.Flush();
+            string r = default;
+            Array.ForEach(names, x => r += x + ' ');
+            fs.WriteLine($"Optimal set: {r}");
+            fs.WriteLine($"CF: {cf}");
+        }
+
+        #region Genetic Algorithm UI
+        private static void LaunchGenetic()
+        {
+            int production_size = default;
+            string[] production_names = default;
+            float[] ecologies = default;
+            int[] costs = default;
+            int[] profits = default;
+            int a = default;
+            Console.WriteLine("Choose input data:\n" +
+                "1 - from console;\n" +
+                "2 - from file;\n");
+            int choose = int.Parse(Console.ReadLine());
+            if (choose == 1)
+                ReadStartInfoFromConsole(ref production_size, ref production_names, ref ecologies, ref costs, ref profits, ref a);
+            else if (choose == 2)
+                ReadStartInfoFromFile(ref production_size, ref production_names, ref ecologies, ref costs, ref profits, ref a);
             Console.Write("Enter population size: ");
             int population_size = Convert.ToInt32(Console.ReadLine());
 
             GeneticAlgorithm algorithm = new GeneticAlgorithm(production_size, ecologies.ToList(), costs.ToList(), profits.ToList(), a, population_size);
             int i_not = 0;
+            int i = 0;
+            string[] rez_names = default;
+            float rez_cf = default;
             while (i_not < 30)
             {
-                WriteInfoAboutProduction(production_names, algorithm);
+                i++;
+                //WriteInfoAboutProduction(production_names, algorithm);
 
                 algorithm.GetStartPopulation();
-                WritePopulationMatrix(algorithm);
+                //WritePopulationMatrix(algorithm);
 
                 WriteBest(algorithm);
 
                 algorithm.GetParents();
-                WriteParents(algorithm);
+                //WriteParents(algorithm);
 
                 algorithm.CreateMask();
-                WriteMask(algorithm);
+                //WriteMask(algorithm);
 
                 algorithm.GetChildren();
-                WriteChildren(algorithm);
+                //WriteChildren(algorithm);
 
-                var best = algorithm.GetTheBestChromosome();
-                
+                var rez = algorithm.GetTheBestChromosome();
+                rez_names = ConvertNames(rez.Item1, production_names).ToArray();
+                rez_cf = rez.Item2;
+
                 algorithm.UpdatePopulation();
 
-                if (best == algorithm.GetTheBestChromosome())
+                WriteIterationBestResultToFile(i, rez_cf);
+
+                if (rez.Item2 == algorithm.GetTheBestChromosome().Item2)
                     i_not++;
                 else
                     i_not = 0;
             }
+            WriteResultToFile(rez_names, rez_cf);
         }
 
         private static void WriteInfoAboutProduction(string[] production_names, GeneticAlgorithm algorithm)
@@ -171,9 +239,66 @@ namespace DO
             var rez = algorithm.GetTheBestChromosome();
             for (int i = 0; i < rez.Item1.Count; i++)
             {
-                Console.Write(rez.Item1[i] + '\t');
+                Console.Write(rez.Item1[i].ToString() + ' ');
             }
-            Console.WriteLine(rez.Item2);
+            Console.WriteLine('\n' + rez.Item2.ToString());
+        }
+        #endregion
+
+        #region Greedy Algorithm UI
+        private static void LaunchGreedy()
+        {
+            int production_size = default;
+            string[] production_names = default;
+            float[] ecologies = default;
+            int[] costs = default;
+            int[] profits = default;
+            int a = default;
+            Console.WriteLine("Choose input data:\n" +
+                "1 - from console;\n" +
+                "2 - from file;\n");
+            int choose = int.Parse(Console.ReadLine());
+            if (choose == 1)
+                ReadStartInfoFromConsole(ref production_size, ref production_names, ref ecologies, ref costs, ref profits, ref a);
+            else if (choose == 2)
+                ReadStartInfoFromFile(ref production_size, ref production_names, ref ecologies, ref costs, ref profits, ref a);
+
+            GreedyAlgorithm algorithm = new GreedyAlgorithm(production_size, ecologies.ToList(), costs.ToList(), profits.ToList(), a);
+
+            var rez = algorithm.Execute();
+            var rez_prod = ConvertNames(rez.Item1, production_names);
+            var rez_cf = rez.Item2;
+
+            Console.WriteLine("Rezult:");
+            rez_prod.ForEach(x => Console.WriteLine(x));
+            Console.WriteLine($"CF: {rez_cf}");
+
+            WriteResultToFile(rez_prod.ToArray(), rez_cf);
+        }
+
+        private static List<string> ConvertNames(List<int> rez, string[] production_names)
+        {
+            return rez.Select(x => production_names[rez.IndexOf(x)]).ToList();
+        }
+        #endregion
+
+        #region Bees Alorithm UI
+        private static void LaunchBees()
+        {
+            int production_size = default;
+            string[] production_names = default;
+            float[] ecologies = default;
+            int[] costs = default;
+            int[] profits = default;
+            int a = default;
+            Console.WriteLine("Choose input data:\n" +
+                "1 - from console;\n" +
+                "2 - from file;\n");
+            int choose = int.Parse(Console.ReadLine());
+            if (choose == 1)
+                ReadStartInfoFromConsole(ref production_size, ref production_names, ref ecologies, ref costs, ref profits, ref a);
+            else if (choose == 2)
+                ReadStartInfoFromFile(ref production_size, ref production_names, ref ecologies, ref costs, ref profits, ref a);
         }
         #endregion
     }
@@ -181,14 +306,24 @@ namespace DO
     {
         static void Main(string[] args)
         {
-            List<float> ecology = new List<float>() { 0.7f, 0.8f, 0.9f, 1.2f, 1.3f };
-            List<int> costs = new List<int>() { 15, 20, 30, 40, 50 };
-            List<int> profits = new List<int>() { 28, 30, 40, 45, 55 };
-            GeneticAlgorithm genetic = new GeneticAlgorithm(5, ecology, costs, profits, 105);
-            genetic.GetStartPopulation();
-            genetic.GetParents();
-            genetic.CreateMask();
-            genetic.GetChildren();
+            //List<float> ecology = new List<float>() { 0.7f, 0.8f, 0.9f, 1.2f, 1.3f };
+            //List<int> costs = new List<int>() { 15, 20, 30, 40, 50 };
+            //List<int> profits = new List<int>() { 28, 30, 40, 45, 55 };
+            //GeneticAlgorithm genetic = new GeneticAlgorithm(5, ecology, costs, profits, 105);
+            //genetic.GetStartPopulation();
+            //genetic.GetParents();
+            //genetic.CreateMask();
+            //genetic.GetChildren();
+            //genetic.UpdatePopulation();
+            //var best = genetic.GetTheBestChromosome();
+            //genetic.GetStartPopulation();
+            //genetic.GetParents();
+            //genetic.CreateMask();
+            //genetic.GetChildren();
+            //genetic.Mutation();
+            //genetic.UpdatePopulation();
+            //var best1 = genetic.GetTheBestChromosome();
+            UI.LaunchMainMenu();
         }
     }
 }

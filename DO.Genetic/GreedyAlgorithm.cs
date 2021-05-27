@@ -22,7 +22,7 @@ namespace DO.Algorithm
             this.A = A;
         }
 
-        public List<int> Execute()
+        public (List<int>, float) Execute()
         {
             List<float> cf = new List<float>();
             for (int i = 0; i < ProductionSize; i++)
@@ -31,19 +31,24 @@ namespace DO.Algorithm
             }
             var ordered = cf.OrderByDescending(x => x).ToList();
             int sum = 0;
+            float rez_cf = 0;
             List<int> rez = new List<int>();
             for (int i = 0; sum <= A;i++)
             {
                 int index = cf.IndexOf(ordered[i]);
                 rez.Add(index);
                 sum += Costs[index];
+                rez_cf += ordered[i];
             }
             if (sum <= A)
-                return rez;
+                return (rez, rez_cf);
             else
             {
-                rez.Remove(rez.Last());
-                return rez;
+                var last = rez.Last();
+                rez_cf -= cf[rez.IndexOf(last)];
+                rez.Remove(last);
+                
+                return (rez, rez_cf);
             }
 
         }
