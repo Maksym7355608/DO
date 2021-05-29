@@ -13,12 +13,16 @@ namespace DO.Algorithm
         public List<int> Profits { get; }
         public int A { get; }
         public int ScoutCount { get; }
+        public int ForagingCount { get; private set; }
+        public int FlowersAreas { get; }
 
         public List<List<int>> CurrentPopulation { get; private set; }
         public List<List<int>> TheBestScouts { get; private set; }
-        public int ForagingCount { get; private set; }
+        public List<int> ConcreteForaging { get; private set; }
+        public Dictionary<List<int>, List<List<int>>> Grouping { get; private set; }
 
-        public BeesAlgorithm(int productionsize, List<float> ecologies, List<int> costs, List<int> profits, int A, int scout_count = 7)
+
+        public BeesAlgorithm(int productionsize, List<float> ecologies, List<int> costs, List<int> profits, int A, int scout_count = 7, int foraging_count = 10, int flowers_areas = 3)
         {
             ProductionSize = productionsize;
             Ecologies = ecologies;
@@ -26,6 +30,8 @@ namespace DO.Algorithm
             Profits = profits;
             this.A = A;
             ScoutCount = scout_count;
+            ForagingCount = foraging_count;
+            FlowersAreas = flowers_areas;
         }
 
         public void RunScouts()
@@ -42,16 +48,60 @@ namespace DO.Algorithm
             CurrentPopulation = start;
         }
 
-        public void GetTheBestScouts()
+        public void GetTheBestScouts(int n)
         {
-            TheBestScouts = CurrentPopulation.OrderByDescending(x => CalculateCost(x)).Take(3).ToList();
+            TheBestScouts = CurrentPopulation.OrderByDescending(x => CalculateCost(x)).Take(n).ToList();
         }
 
         public void RunForagingBees()
         {
-            ForagingCount = (int)Math.Round(TheBestScouts.Sum(x => CalculateCF(x)));
+            ConcreteForaging = new List<int>();
+            Grouping = new Dictionary<List<int>, List<List<int>>>();
+            var cfs = TheBestScouts.Select(x => CalculateCF(x)).ToList();
+            var sum_cfs = TheBestScouts.Sum(x => CalculateCF(x));
+            for (int i = 0; i < TheBestScouts.Count; i++)
+            {
+                ConcreteForaging.Add(Convert.ToInt32(cfs[i] / sum_cfs * ForagingCount));
+            }
 
+            List<List<int>> best = new List<List<int>>();
+            for (int i = 0; i < ConcreteForaging.Count; i++)
+            {
+                for (int j = 0; j < ConcreteForaging[i]; j++)
+                {
+                    best.Add(CreateForaging(TheBestScouts[i]));
+                }
+                Grouping.Add(TheBestScouts[i], best);
+                best.Clear();
+            }
 
+        }
+
+        private List<int> CreateForaging(List<int> scout)
+        {
+            while (true)
+            {
+                Random random = new Random();
+                int index = random.Next(0, scout.Count);
+                scout[index] = Reverse(scout[index]);
+
+                if (CalculateCost(scout) <= A)
+                    return scout;
+                else
+                    scout[index] = Reverse(scout[index]);
+            }
+        }
+
+        public void LocalUpdate()
+        {
+            List<List<int>> best = new List<List<int>>();
+            foreach (var item in Grouping)
+            {
+                List<List<int>> temp = item.Value;
+                temp.Add(item.Key);
+                best.Add(temp.First(x => CalculateCF(x) == temp.Max(y => CalculateCF(y))));
+            }
+            TheBestScouts = best;
         }
 
         private List<int> GetScout()
@@ -96,6 +146,29 @@ namespace DO.Algorithm
                 }
             }
             return cf;
+        }
+
+        private int Reverse(int boolean)
+        {
+            if (boolean == 1)
+                return 0;
+            else
+                return 1;
+        }
+
+        public (List<int>, float) GetTheBestBee()
+        {
+            var best = TheBestScouts.First(y => CalculateCF(y) == TheBestScouts.Max(x => CalculateCF(x)));
+            List<int> cf_names = new List<int>();
+
+            for (int i = 0; i < best.Count; i++)
+            {
+                if (best[i] == 1)
+                    cf_names.Add(i);
+            }
+
+            var cf = CalculateCF(best);
+            return (cf_names, cf);
         }
     }
 }

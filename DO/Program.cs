@@ -23,9 +23,11 @@ namespace DO
                 switch (n)
                 {
                     case 1:
+                        File.WriteAllText("iteration.txt", string.Empty);
                         LaunchGenetic();
                         break;
                     case 2:
+                        File.WriteAllText("iteration.txt", string.Empty);
                         LaunchBees();
                         break;
                     case 3:
@@ -65,7 +67,7 @@ namespace DO
         {
             Console.WriteLine("Enter production count: ");
             production_size = Convert.ToInt32(Console.ReadLine());
-            
+
             production_names = new string[production_size];
             ecologies = new float[production_size];
             costs = new int[production_size];
@@ -87,8 +89,9 @@ namespace DO
         }
         private static void WriteIterationBestResultToFile(int counter, float cf)
         {
-            using StreamWriter fs = new StreamWriter("iteration.txt");
-            fs.WriteLine($"Iteration: {counter}\tCF: {cf}");
+            using StreamWriter fs = new StreamWriter("iteration.txt", true);
+
+            fs.Write($"Iteration: {counter}\tCF: {cf}\n");
         }
         private static void WriteResultToFile(string[] names, float cf)
         {
@@ -98,6 +101,11 @@ namespace DO
             Array.ForEach(names, x => r += x + ' ');
             fs.WriteLine($"Optimal set: {r}");
             fs.WriteLine($"CF: {cf}");
+        }
+
+        private static List<string> ConvertNames(List<int> rez, string[] production_names)
+        {
+            return rez.Select(x => production_names[rez.IndexOf(x)]).ToList();
         }
 
         #region Genetic Algorithm UI
@@ -125,6 +133,8 @@ namespace DO
             int i = 0;
             string[] rez_names = default;
             float rez_cf = default;
+            Dictionary<float, List<string>> best = new Dictionary<float, List<string>>();
+            best.Add(0, null);
             while (i_not < 30)
             {
                 i++;
@@ -133,7 +143,7 @@ namespace DO
                 algorithm.GetStartPopulation();
                 //WritePopulationMatrix(algorithm);
 
-                WriteBest(algorithm);
+                WriteBest(algorithm, production_names);
 
                 algorithm.GetParents();
                 //WriteParents(algorithm);
@@ -152,31 +162,16 @@ namespace DO
 
                 WriteIterationBestResultToFile(i, rez_cf);
 
-                if (rez.Item2 <= algorithm.GetTheBestChromosome().Item2)
+                if (rez.Item2 <= best.Keys.Max())
                     i_not++;
                 else
                     i_not = 0;
+
+                if (!best.ContainsKey(rez_cf))
+                    best.Add(rez_cf, rez_names.ToList());
             }
-            WriteResultToFile(rez_names, rez_cf);
-        }
-
-        private static void WriteInfoAboutProduction(string[] production_names, GeneticAlgorithm algorithm)
-        {
-            Console.Write("Names");
-            Array.ForEach(production_names, x => Console.WriteLine(x + "\t|\t"));
-            Console.WriteLine();
-
-            Console.Write("Ecologies");
-            Array.ForEach(algorithm.Ecologies.ToArray(), x => Console.WriteLine(x.ToString() + "\t|\t"));
-            Console.WriteLine();
-
-            Console.Write("Costs");
-            Array.ForEach(algorithm.Costs.ToArray(), x => Console.WriteLine(x.ToString() + "\t|\t"));
-            Console.WriteLine();
-
-            Console.Write("Profits");
-            Array.ForEach(algorithm.Profits.ToArray(), x => Console.WriteLine(x.ToString() + "\t|\t"));
-            Console.WriteLine();
+            var item = best.First(x => x.Key == best.Keys.Max());
+            WriteResultToFile(item.Value.ToArray(), item.Key);
         }
 
         private static void WritePopulationMatrix(GeneticAlgorithm algorithm)
@@ -233,13 +228,14 @@ namespace DO
             Console.WriteLine();
         }
 
-        private static void WriteBest(GeneticAlgorithm algorithm)
+        private static void WriteBest(GeneticAlgorithm algorithm, string[] production_names)
         {
             Console.Write("Best pop:\t");
             var rez = algorithm.GetTheBestChromosome();
-            for (int i = 0; i < rez.Item1.Count; i++)
+            var names = ConvertNames(rez.Item1, production_names);
+            for (int i = 0; i < names.Count; i++)
             {
-                Console.Write(rez.Item1[i].ToString() + ' ');
+                Console.Write(names[i] + '\t');
             }
             Console.WriteLine('\n' + rez.Item2.ToString());
         }
@@ -275,11 +271,6 @@ namespace DO
 
             WriteResultToFile(rez_prod.ToArray(), rez_cf);
         }
-
-        private static List<string> ConvertNames(List<int> rez, string[] production_names)
-        {
-            return rez.Select(x => production_names[rez.IndexOf(x)]).ToList();
-        }
         #endregion
 
         #region Bees Alorithm UI
@@ -299,6 +290,56 @@ namespace DO
                 ReadStartInfoFromConsole(ref production_size, ref production_names, ref ecologies, ref costs, ref profits, ref a);
             else if (choose == 2)
                 ReadStartInfoFromFile(ref production_size, ref production_names, ref ecologies, ref costs, ref profits, ref a);
+
+            Console.Write("Enter scouts count: ");
+            int scout_count = Convert.ToInt32(Console.ReadLine());
+
+            BeesAlgorithm algorithm = new BeesAlgorithm(production_size, ecologies.ToList(), costs.ToList(), profits.ToList(), a);
+            int i_not = 0;
+            int i = 0;
+            string[] rez_names = default;
+            float rez_cf = default;
+            Dictionary<float, List<string>> best = new Dictionary<float, List<string>>();
+            best.Add(0, null);
+            while (i_not < 30)
+            {
+                i++;
+                algorithm.RunScouts();
+
+                algorithm.GetTheBestScouts(3);
+
+                algorithm.RunForagingBees();
+
+                algorithm.LocalUpdate();
+                WriteBest(algorithm, production_names);
+                var rez = algorithm.GetTheBestBee();
+                rez_names = ConvertNames(rez.Item1, production_names).ToArray();
+                rez_cf = rez.Item2;
+
+                WriteIterationBestResultToFile(i, rez_cf);
+
+                if (rez.Item2 <= best.Keys.Max())
+                    i_not++;
+                else
+                    i_not = 0;
+
+                if (!best.ContainsKey(rez_cf))
+                    best.Add(rez_cf, rez_names.ToList());
+            }
+            var item = best.First(x => x.Key == best.Keys.Max());
+            WriteResultToFile(item.Value.ToArray(), item.Key);
+        }
+
+        private static void WriteBest(BeesAlgorithm algorithm, string[] production_names)
+        {
+            Console.Write("Best pop:\t");
+            var rez = algorithm.GetTheBestBee();
+            var names = ConvertNames(rez.Item1, production_names);
+            for (int i = 0; i < names.Count; i++)
+            {
+                Console.Write(names[i] + '\t');
+            }
+            Console.WriteLine('\n' + rez.Item2.ToString());
         }
         #endregion
     }

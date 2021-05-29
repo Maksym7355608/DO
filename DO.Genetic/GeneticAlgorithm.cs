@@ -68,13 +68,17 @@ namespace DO.Algorithm
             List<List<int>> BluePopulation = new List<List<int>>();
             List<List<int>> YellowPopulation = new List<List<int>>();
             Random random = new Random();
-
-            for (int i = 0; i < PopulationSize; i++)
+            while (BluePopulation.Count == 0 || YellowPopulation.Count == 0)
             {
-                if (random.Next(0, 2) == 0)
-                    BluePopulation.Add(CurrentPopulation[i]);
-                else
-                    YellowPopulation.Add(CurrentPopulation[i]);
+                BluePopulation.Clear();
+                YellowPopulation.Clear();
+                for (int i = 0; i < PopulationSize; i++)
+                {
+                    if (random.Next(0, 2) == 0)
+                        BluePopulation.Add(CurrentPopulation[i]);
+                    else
+                        YellowPopulation.Add(CurrentPopulation[i]);
+                }
             }
             CurrentBlueParent = BluePopulation.First(y => CalculateCF(y) == BluePopulation.Max(x => CalculateCF(x)));
             CurrentYellowParent = YellowPopulation.First(y => CalculateCF(y) == YellowPopulation.Max(x => CalculateCF(x)));
@@ -124,12 +128,12 @@ namespace DO.Algorithm
                 reversed = false;
             }
             if (reversed)
-                while(!CheckAdmissibility(CurrentBlueChild))
+                while (!CheckAdmissibility(CurrentBlueChild))
                 {
                     CurrentBlueChild[random.Next(0, CurrentBlueChild.Count)] = Reverse(CurrentBlueChild[random.Next(0, CurrentBlueChild.Count)]);
                 }
             else
-                while(!CheckAdmissibility(CurrentYellowChild))
+                while (!CheckAdmissibility(CurrentYellowChild))
                 {
                     CurrentYellowChild[random.Next(0, CurrentYellowChild.Count)] = Reverse(CurrentYellowChild[random.Next(0, CurrentYellowChild.Count)]);
                 }
@@ -202,8 +206,16 @@ namespace DO.Algorithm
         public (List<int>, float) GetTheBestChromosome()
         {
             var best = CurrentPopulation.First(y => CalculateCF(y) == CurrentPopulation.Max(x => CalculateCF(x)));
+            List<int> cf_names = new List<int>();
+
+            for (int i = 0; i < best.Count; i++)
+            {
+                if (best[i] == 1)
+                    cf_names.Add(i);
+            }
+
             var cf = CalculateCF(best);
-            return (best, cf);
+            return (cf_names, cf);
         }
     }
 }
