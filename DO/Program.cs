@@ -46,7 +46,7 @@ namespace DO
 
         private static void ReadStartInfoFromFile(ref int production_size, ref string[] production_names, ref float[] ecologies, ref int[] costs, ref int[] profits, ref int a)
         {
-            using StreamReader fs = new StreamReader("data1.txt", Encoding.Default);
+            using StreamReader fs = new StreamReader("test_big_data.txt", Encoding.Default);
             string line;
             line = fs.ReadLine();
             production_size = int.Parse(line);
@@ -74,8 +74,8 @@ namespace DO
             profits = new int[production_size];
             for (int i = 0; i < production_size; i++)
             {
-                Console.WriteLine($"Write info about product {i}:");
-                Console.Write($"Enter name for product {i}:");
+                Console.WriteLine($"Write info about product {i+1}:");
+                Console.Write($"Enter name for product {i+1}:");
                 production_names[i] = Console.ReadLine();
                 Console.Write($"Enter ecology for {production_names[i]}:");
                 ecologies[i] = (float)Convert.ToDouble(Console.ReadLine());
@@ -105,7 +105,12 @@ namespace DO
 
         private static List<string> ConvertNames(List<int> rez, string[] production_names)
         {
-            return rez.Select(x => production_names[rez.IndexOf(x)]).ToList();
+            List<string> a = new List<string>();
+            for (int i = 0; i < rez.Count; i++)
+            {
+                 a.Add(production_names[rez[i]]);
+            }
+            return a;
         }
 
         #region Genetic Algorithm UI
@@ -174,59 +179,59 @@ namespace DO
             WriteResultToFile(item.Value.ToArray(), item.Key);
         }
 
-        private static void WritePopulationMatrix(GeneticAlgorithm algorithm)
-        {
-            for (int i = 0; i < algorithm.PopulationSize; i++)
-            {
-                Console.Write($"Population {i}\t");
-                for (int j = 0; j < algorithm.ProductionSize; j++)
-                {
-                    Console.Write(algorithm.CurrentPopulation[i][j] + '\t');
-                }
-                Console.WriteLine();
-            }
-        }
+        //private static void WritePopulationMatrix(GeneticAlgorithm algorithm)
+        //{
+        //    for (int i = 0; i < algorithm.PopulationSize; i++)
+        //    {
+        //        Console.Write($"Population {i}\t");
+        //        for (int j = 0; j < algorithm.ProductionSize; j++)
+        //        {
+        //            Console.Write(algorithm.CurrentPopulation[i][j] + '\t');
+        //        }
+        //        Console.WriteLine();
+        //    }
+        //}
 
-        private static void WriteParents(GeneticAlgorithm algorithm)
-        {
-            Console.Write($"The best blue Population \t");
-            for (int j = 0; j < algorithm.ProductionSize; j++)
-            {
-                Console.Write(algorithm.CurrentBlueParent[j] + '\t');
-            }
-            Console.WriteLine();
-            Console.Write($"The best yellow Population \t");
-            for (int j = 0; j < algorithm.ProductionSize; j++)
-            {
-                Console.Write(algorithm.CurrentYellowParent[j] + '\t');
-            }
-            Console.WriteLine();
-        }
+        //private static void WriteParents(GeneticAlgorithm algorithm)
+        //{
+        //    Console.Write($"The best blue Population \t");
+        //    for (int j = 0; j < algorithm.ProductionSize; j++)
+        //    {
+        //        Console.Write(algorithm.CurrentBlueParent[j] + '\t');
+        //    }
+        //    Console.WriteLine();
+        //    Console.Write($"The best yellow Population \t");
+        //    for (int j = 0; j < algorithm.ProductionSize; j++)
+        //    {
+        //        Console.Write(algorithm.CurrentYellowParent[j] + '\t');
+        //    }
+        //    Console.WriteLine();
+        //}
 
-        private static void WriteMask(GeneticAlgorithm algorithm)
-        {
-            Console.Write($"Population Z\t");
-            for (int j = 0; j < algorithm.ProductionSize; j++)
-            {
-                Console.Write(algorithm.CurrentMask[j] + '\t');
-            }
-        }
+        //private static void WriteMask(GeneticAlgorithm algorithm)
+        //{
+        //    Console.Write($"Population Z\t");
+        //    for (int j = 0; j < algorithm.ProductionSize; j++)
+        //    {
+        //        Console.Write(algorithm.CurrentMask[j] + '\t');
+        //    }
+        //}
 
-        private static void WriteChildren(GeneticAlgorithm algorithm)
-        {
-            Console.Write($"Population X\t");
-            for (int j = 0; j < algorithm.ProductionSize; j++)
-            {
-                Console.Write(algorithm.CurrentBlueChild[j] + '\t');
-            }
-            Console.WriteLine();
-            Console.Write($"Population Y\t");
-            for (int j = 0; j < algorithm.ProductionSize; j++)
-            {
-                Console.Write(algorithm.CurrentYellowChild[j] + '\t');
-            }
-            Console.WriteLine();
-        }
+        //private static void WriteChildren(GeneticAlgorithm algorithm)
+        //{
+        //    Console.Write($"Population X\t");
+        //    for (int j = 0; j < algorithm.ProductionSize; j++)
+        //    {
+        //        Console.Write(algorithm.CurrentBlueChild[j] + '\t');
+        //    }
+        //    Console.WriteLine();
+        //    Console.Write($"Population Y\t");
+        //    for (int j = 0; j < algorithm.ProductionSize; j++)
+        //    {
+        //        Console.Write(algorithm.CurrentYellowChild[j] + '\t');
+        //    }
+        //    Console.WriteLine();
+        //}
 
         private static void WriteBest(GeneticAlgorithm algorithm, string[] production_names)
         {
@@ -347,23 +352,6 @@ namespace DO
     {
         static void Main(string[] args)
         {
-            //List<float> ecology = new List<float>() { 0.7f, 0.8f, 0.9f, 1.2f, 1.3f };
-            //List<int> costs = new List<int>() { 15, 20, 30, 40, 50 };
-            //List<int> profits = new List<int>() { 28, 30, 40, 45, 55 };
-            //GeneticAlgorithm genetic = new GeneticAlgorithm(5, ecology, costs, profits, 105);
-            //genetic.GetStartPopulation();
-            //genetic.GetParents();
-            //genetic.CreateMask();
-            //genetic.GetChildren();
-            //genetic.UpdatePopulation();
-            //var best = genetic.GetTheBestChromosome();
-            //genetic.GetStartPopulation();
-            //genetic.GetParents();
-            //genetic.CreateMask();
-            //genetic.GetChildren();
-            //genetic.Mutation();
-            //genetic.UpdatePopulation();
-            //var best1 = genetic.GetTheBestChromosome();
             UI.LaunchMainMenu();
         }
     }
